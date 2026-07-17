@@ -1,0 +1,29 @@
+{
+  "name": "ezlauncher",
+  "version": "1.0.0",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "dependencies": {
+    "electron": "^28.0.0",
+    "axios": "^1.6.2",
+    "sqlite3": "^5.1.7",
+    "crypto-js": "^4.2.0"
+  },
+  "devDependencies": {
+    "electron-builder": "^24.9.0"
+  },
+  "build": {
+    "appId": "com.ezlauncher.app",
+    "productName": "EZLauncher",
+    "files": [
+      "**/*",
+      "renderer/**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EZLauncher</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="header">
+        <h1>EZLauncher</h1>
+        <div class="account-switcher-container">
+            <button id="account-switcher">Crack</button>
+            <div id="microsoft-login" style="display: none;">
+                <button id="microsoft-login-button">Se connecter avec Microsoft</button>
+                <span id="microsoft-username"></span>
+            </div>
+            <div id="crack-username">
+                <input type="text" id="crack-username-input" placeholder="Pseudo" value="Steve" />
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="server-list" id="server-list">
+            <!-- Les serveurs seront ajoutés ici dynamiquement -->
+        </div>
+
+        <div class="server-details" id="server-details">
+            <p>Sélectionnez un serveur pour voir les détails.</p>
+        </div>
+    </div>
+
+    <div class="notifications-container" id="notifications-container"></div>
+
+    <script src="script.js"></script>
+</body>
+</html>
