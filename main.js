@@ -2,9 +2,11 @@ const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
+const http = require('http');
 const { exec } = require('child_process');
 const sqlite3 = require('sqlite3').verbose();
 const crypto = require('crypto');
+const axios = require('axios');
 
 let mainWindow;
 let db;
@@ -32,6 +34,14 @@ function initDatabase() {
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         `);
+        db.run(`
+            CREATE TABLE IF NOT EXISTS servers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ip TEXT NOT NULL UNIQUE,
+                name TEXT,
+                port INTEGER DEFAULT 25565
+            )
+        `);
     });
 }
 
@@ -43,28 +53,28 @@ function calculateSHA256(filePath) {
     return hashSum.digest('hex');
 }
 
-// Télécharge un fichier avec Axios (pour le téléchargement parallèle)
-async function downloadFile(url, destination) {
-    const response = await axios({
-        method: 'get',
-        url: url,
-        responseType: 'stream'
-    });
-    
-    const writer = fs.createWriteStream(destination);
-    response.data.pipe(writer);
-    
-    return new Promise((resolve, reject) => {
-        writer.on('finish', resolve);
-        writer.on('error', reject);
-    });
-}
-
 // Appel API pour récupérer la liste des serveurs
-ipcMain.handle('fetch-servers', async (event, ip) => {
+ipcMain.handle('fetch-servers', async (event) => {
     try {
-        const response = await axios.get(`http://${ip}:8080/api/servers`);
-        return response.data;
+        const dbServers = await new Promise((resolve, reject) => {
+            db.all('SELECT * FROM servers', (err, rows) => {
+                if (err) reject(err);
+                else resolve(rows);
+            });
+        });
+        
+        const servers = [];
+        for (const server of dbServers) {
+            try {
+                const response = await axios.get(`http://${server.ip}:8080/api/servers`);
+                if (response.data && response.data.servers) {
+                    servers.push(...response.data.servers.map(s => ({ ...s, savedIp: server.ip, savedName: server.name })));
+                }
+            } catch (error) {
+                console.error(`Erreur pour le serveur ${server.ip}:`, error.message);
+            }
+        }
+        return { servers };
     } catch (error) {
         console.error('Erreur lors de la récupération des serveurs:', error.message);
         throw error;
@@ -86,7 +96,7 @@ ipcMain.handle('check-server', async (event, { ip, player, hash }) => {
     }
 });
 
-// Télécharge le modpack en parallèle (5 chunks max)
+// Télécharge le modpack
 ipcMain.handle('download-modpack', async (event, { ip, serverHash }) => {
     try {
         const modpackDir = path.join(__dirname, 'modpacks', ip);
@@ -148,26 +158,38 @@ ipcMain.handle('log-connection', async (event, { serverIp, playerName, startTime
     );
 });
 
-// Récupère l'historique
-ipcMain.handle('get-history', async (event, serverIp) => {
+// Ajoute un serveur à la base de données
+ipcMain.handle('add-server', async (event, { ip, name, port }) => {
     return new Promise((resolve, reject) => {
-        db.all(
-            'SELECT * FROM connections WHERE server_ip = ? ORDER BY start_time DESC',
-            [serverIp],
-            (err, rows) => {
+        db.run(
+            'INSERT OR IGNORE INTO servers (ip, name, port) VALUES (?, ?, ?)',
+            [ip, name || ip, port || 25565],
+            function(err) {
                 if (err) reject(err);
-                else resolve(rows);
+                else resolve({ success: true });
             }
         );
     });
 });
 
-// Ajoute une notification
-ipcMain.handle('add-notification', async (event, { serverIp, message }) => {
-    db.run(
-        'INSERT INTO notifications (server_ip, message) VALUES (?, ?)',
-        [serverIp, message]
-    );
+// Supprime un serveur de la base de données
+ipcMain.handle('remove-server', async (event, ip) => {
+    return new Promise((resolve, reject) => {
+        db.run('DELETE FROM servers WHERE ip = ?', [ip], function(err) {
+            if (err) reject(err);
+            else resolve({ success: true });
+        });
+    });
+});
+
+// Récupère les serveurs sauvegardés
+ipcMain.handle('get-saved-servers', async (event) => {
+    return new Promise((resolve, reject) => {
+        db.all('SELECT * FROM servers', (err, rows) => {
+            if (err) reject(err);
+            else resolve(rows);
+        });
+    });
 });
 
 // Récupère les notifications
@@ -186,6 +208,14 @@ ipcMain.handle('get-notifications', async (event) => {
 // Marque une notification comme lue
 ipcMain.handle('mark-notification-read', async (event, id) => {
     db.run('UPDATE notifications SET is_read = TRUE WHERE id = ?', [id]);
+});
+
+// Ajoute une notification
+ipcMain.handle('add-notification', async (event, { serverIp, message }) => {
+    db.run(
+        'INSERT INTO notifications (server_ip, message) VALUES (?, ?)',
+        [serverIp, message]
+    );
 });
 
 // Initialisation de l'application

@@ -31,6 +31,31 @@
         </div>
     </div>
 
+    <!-- Bouton pour ajouter un serveur -->
+    <button id="add-server-button" class="add-server-button">+ Ajouter un serveur</button>
+
+    <!-- Modale pour ajouter un serveur -->
+    <div id="add-server-modal" class="modal">
+        <div class="modal-content">
+            <h2>Ajouter un serveur</h2>
+            <form id="add-server-form">
+                <label for="server-ip">IP du serveur :</label>
+                <input type="text" id="server-ip" placeholder="127.0.0.1" required />
+                
+                <label for="server-port">Port (optionnel) :</label>
+                <input type="number" id="server-port" placeholder="25565" value="25565" />
+                
+                <label for="server-name">Nom (optionnel) :</label>
+                <input type="text" id="server-name" placeholder="Mon Serveur" />
+                
+                <div class="modal-buttons">
+                    <button type="button" id="cancel-add-server">Annuler</button>
+                    <button type="submit" id="confirm-add-server">Ajouter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="notifications-container" id="notifications-container"></div>
 
     <script src="script.js"></script>

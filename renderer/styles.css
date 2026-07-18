@@ -73,7 +73,7 @@ body {
     background-color: #333;
     padding: 10px;
     overflow-y: auto;
-    height: calc(100vh - 60px);
+    height: calc(100vh - 120px);
 }
 
 .server-item {
@@ -84,6 +84,7 @@ body {
     background-color: #444;
     border-radius: 5px;
     cursor: pointer;
+    position: relative;
 }
 
 .server-item:hover {
@@ -183,7 +184,7 @@ body {
 
 .notifications-container {
     position: fixed;
-    bottom: 20px;
+    bottom: 80px; /* Espace pour le bouton "Ajouter un serveur" */
     right: 20px;
     display: flex;
     flex-direction: column;
@@ -239,4 +240,125 @@ body {
     margin-top: 10px;
     font-size: 0.9em;
     color: #aaa;
+}
+
+/* Bouton "Ajouter un serveur" */
+.add-server-button {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 1em;
+    z-index: 1000;
+}
+
+.add-server-button:hover {
+    background-color: #45a049;
+}
+
+/* Modale pour ajouter un serveur */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: #333;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    max-width: 90%;
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    color: #fff;
+}
+
+.modal-content label {
+    display: block;
+    margin-top: 10px;
+    color: #ccc;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 8px;
+    margin-top: 5px;
+    border-radius: 4px;
+    border: none;
+    background-color: #444;
+    color: white;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.modal-buttons button {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.modal-buttons button[type="submit"] {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.modal-buttons button[type="submit"]:hover {
+    background-color: #45a049;
+}
+
+.modal-buttons button[type="button"] {
+    background-color: #555;
+    color: white;
+}
+
+.modal-buttons button[type="button"]:hover {
+    background-color: #666;
+}
+
+/* Bouton de suppression d'un serveur */
+.server-item .delete-server {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background-color: #F44336;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    display: none;
+}
+
+.server-item:hover .delete-server {
+    display: block;
+}
+
+.server-item .delete-server:hover {
+    background-color: #d32f2f;
 }

@@ -3,7 +3,6 @@ let servers = [];
 let selectedServer = null;
 let accountType = 'crack'; // 'official' ou 'crack'
 let currentPlayer = 'Steve'; // Pseudo par défaut
-let notifications = [];
 
 // Initialisation
 window.addEventListener('DOMContentLoaded', () => {
@@ -15,9 +14,7 @@ window.addEventListener('DOMContentLoaded', () => {
 // Charge les serveurs depuis l'API
 async function loadServers() {
     try {
-        // Pour l'exemple, on utilise une IP par défaut (à remplacer par une liste dynamique)
-        const ip = '127.0.0.1';
-        const response = await window.ezlauncher.fetchServers(ip);
+        const response = await window.ezlauncher.fetchServers();
         servers = response.servers;
         renderServerList();
     } catch (error) {
@@ -40,8 +37,33 @@ function setupEventListeners() {
             accountType === 'crack' ? 'block' : 'none';
     });
 
-    // Bouton pour rafraîchir la liste
-    document.getElementById('refresh-servers')?.addEventListener('click', loadServers);
+    // Bouton pour ajouter un serveur
+    document.getElementById('add-server-button').addEventListener('click', () => {
+        document.getElementById('add-server-modal').classList.add('active');
+    });
+
+    // Bouton pour annuler l'ajout d'un serveur
+    document.getElementById('cancel-add-server').addEventListener('click', () => {
+        document.getElementById('add-server-modal').classList.remove('active');
+    });
+
+    // Formulaire pour ajouter un serveur
+    document.getElementById('add-server-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const ip = document.getElementById('server-ip').value;
+        const port = document.getElementById('server-port').value || 25565;
+        const name = document.getElementById('server-name').value || ip;
+        
+        try {
+            await window.ezlauncher.addServer({ ip, name, port });
+            showNotification(`Serveur ${name} ajouté avec succès !`, 'success');
+            document.getElementById('add-server-modal').classList.remove('active');
+            document.getElementById('add-server-form').reset();
+            loadServers(); // Recharge la liste des serveurs
+        } catch (error) {
+            showNotification(`Erreur lors de l'ajout du serveur : ${error.message}`, 'error');
+        }
+    });
 }
 
 // Affiche la liste des serveurs
@@ -53,15 +75,30 @@ function renderServerList() {
         const serverItem = document.createElement('div');
         serverItem.className = 'server-item';
         serverItem.innerHTML = `
-            <img src="http://${server.ip}:8080${server.smallIcon}" width="32" height="32" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZD0iTTIyIDIyYTIyIDIyIDAgMCAwIDIyLTIyem0tMiAyYTIgMiAyIDAgMCAwIDItMmg0YTIgMiAyIDAgMCAwIDItMmgtNnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnZ2Mm0yIDJhMiAyIDIyIDAgMCAwIDItMmgtNnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnZ2Mm0yIDJhMiAyIDIyIDAgMCAwIDItMmgtNnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAy" />
+            <img src="http://${server.ip || server.savedIp}:8080${server.smallIcon}" width="32" height="32" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+PHBhdGggZD0iTTIyIDIyYTIyIDIyIDAgMCAwIDIyLTIyem0tMiAyYTIgMiAyIDAgMCAwIDItMmgtNnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnZ2Mm0yIDJhMiAyIDIyIDAgMCAwIDItMmgtNnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnZ2Mm0yIDJhMiAyIDIyIDAgMCAwIDItMmgtNnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAyYTIgMiAyIDAgMCAwIDItMnYtMmgtMnYyYTIgMiAyIDAgMCAwIDItMnptMiAy" />
             <div class="server-info">
-                <div class="server-name">${server.name}</div>
-                <div class="server-motd">${server.motd}</div>
+                <div class="server-name">${server.name || server.savedName || server.ip || server.savedIp}</div>
+                <div class="server-motd">${server.motd || 'Aucune description'}</div>
             </div>
+            <button class="delete-server" onclick="deleteServer('${server.ip || server.savedIp}')">×</button>
         `;
-        serverItem.addEventListener('click', () => selectServer(server));
+        serverItem.addEventListener('click', (e) => {
+            if (e.target.classList.contains('delete-server')) return; // Ne pas sélectionner si on clique sur la croix
+            selectServer(server);
+        });
         serverList.appendChild(serverItem);
     });
+}
+
+// Supprime un serveur
+async function deleteServer(ip) {
+    try {
+        await window.ezlauncher.removeServer(ip);
+        showNotification(`Serveur ${ip} supprimé avec succès !`, 'success');
+        loadServers(); // Recharge la liste des serveurs
+    } catch (error) {
+        showNotification(`Erreur lors de la suppression du serveur : ${error.message}`, 'error');
+    }
 }
 
 // Sélectionne un serveur
@@ -69,15 +106,16 @@ async function selectServer(server) {
     selectedServer = server;
     
     // Affiche les détails du serveur
-    const bigIconUrl = server.bigIcon ? `http://${server.ip}:8080${server.bigIcon}` : `http://${server.ip}:8080${server.smallIcon}`;
+    const ip = server.ip || server.savedIp;
+    const bigIconUrl = server.bigIcon ? `http://${ip}:8080${server.bigIcon}` : `http://${ip}:8080${server.smallIcon}`;
     
     document.getElementById('server-details').innerHTML = `
         <img src="${bigIconUrl}" class="background-image" onerror="this.style.display='none'" />
         <div class="server-details-content">
-            <h2>${server.name}</h2>
-            <p>${server.motd}</p>
-            <p>Version : ${server.version}</p>
-            <p>IP : ${server.ip}:${server.port || 25565}</p>
+            <h2>${server.name || server.savedName || ip}</h2>
+            <p>${server.motd || 'Aucune description'}</p>
+            <p>Version : ${server.version || 'Inconnue'}</p>
+            <p>IP : ${ip}:${server.port || 25565}</p>
             <div id="server-status"></div>
             <div class="version-info">
                 <p>Modpack : ${server.hash ? server.hash.substring(0, 16) + '...' : 'Non spécifié'}</p>
@@ -96,27 +134,16 @@ async function selectServer(server) {
 // Vérifie le statut du serveur (whitelist + hash)
 async function checkServerStatus(server) {
     try {
+        const ip = server.ip || server.savedIp;
         const player = accountType === 'crack' ?
             document.getElementById('crack-username-input').value :
             document.getElementById('microsoft-username').textContent || currentPlayer;
 
         // Récupère le hash local si le modpack existe
         let localHash = null;
-        try {
-            const fs = require('fs');
-            const path = require('path');
-            const modpackPath = path.join(__dirname, '..', 'modpacks', server.ip, 'mode_client.zip');
-            if (fs.existsSync(modpackPath)) {
-                // On ne peut pas calculer le hash ici (pas d'accès à crypto dans le renderer),
-                // donc on envoie null et on vérifie côté main.js
-                localHash = null; // Le hash sera vérifié côté backend
-            }
-        } catch (e) {
-            console.log("Impossible de vérifier le hash local :", e.message);
-        }
 
         const response = await window.ezlauncher.checkServer({
-            ip: server.ip,
+            ip: ip,
             player: player,
             hash: localHash
         });
@@ -140,8 +167,8 @@ async function checkServerStatus(server) {
             
             // Ajoute une notification
             window.ezlauncher.addNotification({
-                serverIp: server.ip,
-                message: `Modpack obsolète pour ${server.name}`
+                serverIp: ip,
+                message: `Modpack obsolète pour ${server.name || ip}`
             });
             loadNotifications();
         } else {
@@ -158,10 +185,11 @@ async function checkServerStatus(server) {
 // Met à jour le modpack
 async function updateModpack(server, downloadUrl) {
     try {
-        showNotification(`Téléchargement du modpack pour ${server.name}...`, 'info');
+        const ip = server.ip || server.savedIp;
+        showNotification(`Téléchargement du modpack pour ${server.name || ip}...`, 'info');
         
         const result = await window.ezlauncher.downloadModpack({
-            ip: server.ip,
+            ip: ip,
             serverHash: server.hash
         });
         
@@ -174,6 +202,7 @@ async function updateModpack(server, downloadUrl) {
 
 // Lance le jeu
 function launchGame(server) {
+    const ip = server.ip || server.savedIp;
     const player = accountType === 'crack' ?
         document.getElementById('crack-username-input').value :
         document.getElementById('microsoft-username').textContent || currentPlayer;
@@ -181,16 +210,16 @@ function launchGame(server) {
     // Log la connexion
     const startTime = new Date().toISOString();
     window.ezlauncher.logConnection({
-        serverIp: server.ip,
+        serverIp: ip,
         playerName: player,
         startTime: startTime,
         endTime: new Date().toISOString()
     });
 
     window.ezlauncher.launchGame({
-        ip: server.ip,
+        ip: ip,
         port: server.port || 25565,
-        version: server.version,
+        version: server.version || '1.19.2',
         username: player,
         isOfficial: accountType === 'official'
     });
